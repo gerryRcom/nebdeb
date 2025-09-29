@@ -3,7 +3,7 @@ Description=Nebula Mesh Service
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/nebula/nebula -config /usr/local/bin/nebula/##HOSTNAME##.yml
+ExecStart=/usr/bin/nebula/nebula -config /usr/bin/nebula/##HOSTNAME##.yml
 Restart=always
 
 [Install]

@@ -4,9 +4,9 @@
 # PKI defines the location of credentials for this node. Each of these can also be inlined by using the yaml ": |" syntax.
 pki:
   # The CAs that are accepted by this node. Must contain one or more certificates created by 'nebula-cert ca'
-  ca: /usr/local/bin/nebula/ca.crt
-  cert: /usr/local/bin/nebula/##HOSTNAME##.crt
-  key: /usr/local/bin/nebula/##HOSTNAME##.key
+  ca: /usr/bin/nebula/ca.crt
+  cert: /usr/bin/nebula/##HOSTNAME##.crt
+  key: /usr/bin/nebula/##HOSTNAME##.key
   # blocklist is a list of certificate fingerprints that we will refuse to talk to
   #blocklist:
   #  - c99d4e650533b92061b09918e838a5a0a6aaee21eed1d12fd937682865936c72
@@ -19,7 +19,7 @@ pki:
 #   "{nebula ip}": ["{routable ip/dns name}:{routable port}"]
 # Example, if your lighthouse has the nebula IP of 192.168.100.1 and has the real ip address of 100.64.22.11 and runs on port 4242:
 static_host_map:
-  "192.168.123.1": ["##LIGHTHOUSE##:4242"]
+  "##LIGHTHOUSEIP##": ["##LIGHTHOUSE##:4242"]
 
 # The static_map config stanza can be used to configure how the static_host_map behaves.
 #static_map:
@@ -53,7 +53,7 @@ lighthouse:
   # IMPORTANT: THIS SHOULD BE EMPTY ON LIGHTHOUSE NODES
   # IMPORTANT2: THIS SHOULD BE LIGHTHOUSES' NEBULA IPs, NOT LIGHTHOUSES' REAL ROUTABLE IPs
   hosts:
-    - "192.168.123.1"
+    - "##LIGHTHOUSEIP##"
 
   # remote_allow_list allows you to control ip ranges that this node will
   # consider when handshaking to another node. By default, any remote IPs are

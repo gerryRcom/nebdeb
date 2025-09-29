@@ -1,0 +1,8 @@
+Package: nebula
+Version: 1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: gerryR <packages@domain.com>
+Description: Nebula Service Package
+ A Debian package that install Nebula mesh service and configuration.

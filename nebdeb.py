@@ -4,6 +4,7 @@ import hashlib
 import shutil
 import os
 import csv
+import re
 
 
 # Set some constants
@@ -19,7 +20,7 @@ def generateCert(hostName, nebIP):
     print(certCommand)
     print(subprocess.call(certCommand, shell=True))
 
-# Get the hash of the nebula binary to comapre against previous run
+# Get the hash of the nebula binary to compare against previous run
 def getHash():
     with open(INPUT+'nebula', 'rb') as nebulaBinary:
         nebulaBinaryContent = nebulaBinary.read()
@@ -39,12 +40,17 @@ def compareHash():
                 nebulaHash.close()
                 return False
 
+# build nebula config file per host
 def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
     # Define placeholder entries
     PH_HOST="##HOSTNAME##"
     PH_IP="##HOSTIP##"
     PH_AMLIGHTHOUSE="##AMLIGHTHOUSE##"
     PH_LIGHTHOUSE="##LIGHTHOUSE##"
+    PH_LIGHTHOUSEIP="##LIGHTHOUSEIP##"
+
+    # Get the IP of the lighthouse, for now LH IP will always be the first in the range
+    lightHouseIP = re.sub(r'\d{1,3}$','1',nebIP)
 
     os.makedirs(OUTPUT+hostName,exist_ok=True)
     shutil.copyfile(INPUT+'nebula.yml', OUTPUT+hostName+'/'+hostName+'.yml')
@@ -56,11 +62,13 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
         configData = configData.replace(PH_IP, nebIP)
         configData = configData.replace(PH_LIGHTHOUSE, lightHouse)
         configData = configData.replace(PH_AMLIGHTHOUSE, amLighthouse)
+        configData = configData.replace(PH_LIGHTHOUSEIP, lightHouseIP)
         configFile.close()
     with open(OUTPUT+hostName+'/'+hostName+'.yml', 'wt') as configFile:
         configFile.write(configData)
         configFile.close()
 
+# build linux service file per host
 def buildService(hostName):
     # Define placeholder entries
     PH_HOST="##HOSTNAME##"
@@ -75,6 +83,17 @@ def buildService(hostName):
         serviceFile.write(serviceData)
         serviceFile.close()
 
+# build deb package per host
+def buildDeb(hostName):
+    # build folder and file structure for the .deb
+    os.makedirs(OUTPUT+hostName+'/nebula/',exist_ok=True)
+    os.makedirs(OUTPUT+hostName+'/nebula/usr/bin/nebula/',exist_ok=True)
+    os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
+    shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
+    shutil.copyfile(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
+    shutil.copyfile(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
+    shutil.copyfile(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
+
 
 
 if __name__ == "__main__":
@@ -87,3 +106,6 @@ if __name__ == "__main__":
         next(systemsContent, None)
         for systemsData in systemsContent:
             print(systemsData[0])
+            buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+            buildService(systemsData[0])
+            buildDeb(systemsData[0])

@@ -1,0 +1,5 @@
+#!/bin/sh
+systemctl enable nebula
+systemctl start nebula
+echo "nebula install complete"
+exit 0
