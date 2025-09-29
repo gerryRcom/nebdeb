@@ -3,6 +3,7 @@ import subprocess
 import hashlib
 import shutil
 import os
+import csv
 
 
 # Set some constants
@@ -75,6 +76,14 @@ def buildService(hostName):
         serviceFile.close()
 
 
+
 if __name__ == "__main__":
-    buildConfig("testbane","199.222.222.222","false","1.1.1.1")
-    buildService("testbane")
+    #buildConfig("testbane","199.222.222.222","false","1.1.1.1")
+    #buildService("testbane")
+
+    with open(INPUT+'systems.csv', newline='') as systemsCSV:
+        systemsContent = csv.reader(systemsCSV)
+        # skip header line
+        next(systemsContent, None)
+        for systemsData in systemsContent:
+            print(systemsData[0])
