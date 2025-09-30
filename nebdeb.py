@@ -12,6 +12,7 @@ SYSTEMS = "input/systems.csv"
 INPUT = "input/"
 OUTPUT = "output/"
 BINHASH = "input/binhash"
+LHIP = "1"
 
 
 
@@ -49,8 +50,8 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
     PH_LIGHTHOUSE="##LIGHTHOUSE##"
     PH_LIGHTHOUSEIP="##LIGHTHOUSEIP##"
 
-    # Get the IP of the lighthouse, for now LH IP will always be the first in the range
-    lightHouseIP = re.sub(r'\d{1,3}$','1',nebIP)
+    # Get the IP of the lighthouse using the network address and the LHIP constant
+    lightHouseIP = re.sub(r'\d{1,3}$',LHIP,nebIP)
 
     os.makedirs(OUTPUT+hostName,exist_ok=True)
     shutil.copyfile(INPUT+'nebula.yml', OUTPUT+hostName+'/'+hostName+'.yml')
@@ -90,9 +91,14 @@ def buildDeb(hostName):
     os.makedirs(OUTPUT+hostName+'/nebula/usr/bin/nebula/',exist_ok=True)
     os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
     shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
-    shutil.copyfile(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
-    shutil.copyfile(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
-    shutil.copyfile(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
+    shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
+    shutil.copy2(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
+    shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
+
+    # build deb package from content generated above
+    debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula"
+    print(debCommand)
+    print(subprocess.call(debCommand, shell=True))
 
 
 
