@@ -1,4 +1,4 @@
 output/*
 input/systems.csv
-input/nebula
-input/nebula-cert
+input/certs/*
+nebula

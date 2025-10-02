@@ -13,3 +13,4 @@ A means to manage nebula, specifically:
 - Allow tayloring of services, my initial requirement is only fo ssh
 - Allow multiple LightHouses, my initial requirement only has one LightHouse
 - Allow simple method to rebuild everything e.g. in the case a cert is exposed
+- Build an ansible inventory to simplify deployment of the deb

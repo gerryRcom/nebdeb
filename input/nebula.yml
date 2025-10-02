@@ -122,7 +122,7 @@ lighthouse:
 listen:
   # To listen on both any ipv4 and ipv6 use "::"
   host: 0.0.0.0
-  port: 0
+  port: ##LISTENPORT##
   # Sets the max number of packets to pull from the kernel for each syscall (under systems that support recvmmsg)
   # default is 64, does not support reload
   #batch: 64

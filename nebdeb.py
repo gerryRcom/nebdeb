@@ -17,7 +17,7 @@ LHIP = "1"
 
 
 def generateCert(hostName, nebIP):
-    certCommand=INPUT+"nebula-cert sign -name "+hostName+" -ip "+nebIP
+    certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
     print(certCommand)
     print(subprocess.call(certCommand, shell=True))
 
@@ -49,6 +49,7 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
     PH_AMLIGHTHOUSE="##AMLIGHTHOUSE##"
     PH_LIGHTHOUSE="##LIGHTHOUSE##"
     PH_LIGHTHOUSEIP="##LIGHTHOUSEIP##"
+    PH_PORT="##LISTENPORT##"
 
     # Get the IP of the lighthouse using the network address and the LHIP constant
     lightHouseIP = re.sub(r'\d{1,3}$',LHIP,nebIP)
@@ -64,6 +65,10 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
         configData = configData.replace(PH_LIGHTHOUSE, lightHouse)
         configData = configData.replace(PH_AMLIGHTHOUSE, amLighthouse)
         configData = configData.replace(PH_LIGHTHOUSEIP, lightHouseIP)
+        if amLighthouse == "true":
+            configData = configData.replace(PH_PORT, "4242")
+        else:
+            configData = configData.replace(PH_PORT, "0")
         configFile.close()
     with open(OUTPUT+hostName+'/'+hostName+'.yml', 'wt') as configFile:
         configFile.write(configData)
@@ -92,6 +97,7 @@ def buildDeb(hostName):
     os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
     shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
     shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
+    shutil.copy2(INPUT+'certs/ca.crt', OUTPUT+hostName+'/nebula/usr/bin/nebula/ca.crt')
     shutil.copy2(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
     shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
 
@@ -114,4 +120,5 @@ if __name__ == "__main__":
             print(systemsData[0])
             buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
             buildService(systemsData[0])
+            generateCert(systemsData[0],systemsData[1])
             buildDeb(systemsData[0])
