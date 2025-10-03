@@ -109,6 +109,23 @@ def buildDeb(hostName):
     print(debCommand)
     print(subprocess.call(debCommand, shell=True))
 
+# purge all previously generated output e.g. if a cert was exposed or you a new binary was released.
+def purgeOutput(toPurge):
+    if toPurge == "1":
+        shutil.rmtree(OUTPUT)
+
+
+def nebdebMenu():
+    print("################################")
+    print("##   nebdeb - Manage Nebula   ##")
+    print("##                            ##")
+    print("##   1 - Purge All Output     ##")
+    print("##   2 - List Systems in csv  ##")
+    print("##   3 - List Systems Output  ##")
+    print("##   4 - Generate configs     ##")
+    print("##                            ##")
+    print("################################")
+
 
 
 if __name__ == "__main__":
@@ -119,10 +136,23 @@ if __name__ == "__main__":
         systemsContent = csv.reader(systemsCSV)
         # skip header line
         next(systemsContent, None)
-        for systemsData in systemsContent:
-            print(systemsData[0])
-            buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
-            buildService(systemsData[0])
-            buildDeb(systemsData[0])
-            generateCert(systemsData[0],systemsData[1])
-            buildDeb(systemsData[0])
+
+        nebdebMenu()
+        print("Enter selection 1-4: ")
+        menuSelection = input()
+        if menuSelection == "1":
+            purgeOutput(menuSelection)
+        elif menuSelection == "2":
+            for systemsData in systemsContent:
+                print(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+        elif menuSelection == "3":
+            print(os.listdir(OUTPUT))
+        elif menuSelection == "4":
+            for systemsData in systemsContent:
+                buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+                buildService(systemsData[0])
+                buildDeb(systemsData[0])
+                generateCert(systemsData[0],systemsData[1])
+                buildDeb(systemsData[0])
+        else:
+            print("Invalid selection")
