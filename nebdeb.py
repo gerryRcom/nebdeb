@@ -49,6 +49,7 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
     PH_AMLIGHTHOUSE="##AMLIGHTHOUSE##"
     PH_LIGHTHOUSE="##LIGHTHOUSE##"
     PH_LIGHTHOUSEIP="##LIGHTHOUSEIP##"
+    PH_LIGHTHOUSEHOST="##LIGHTHOUSEHOST##"
     PH_PORT="##LISTENPORT##"
 
     # Get the IP of the lighthouse using the network address and the LHIP constant
@@ -67,8 +68,10 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
         configData = configData.replace(PH_LIGHTHOUSEIP, lightHouseIP)
         if amLighthouse == "true":
             configData = configData.replace(PH_PORT, "4242")
+            configData = configData.replace(PH_LIGHTHOUSEHOST, "")
         else:
             configData = configData.replace(PH_PORT, "0")
+            configData = configData.replace(PH_LIGHTHOUSEHOST, "- \""+lightHouseIP+"\"")
         configFile.close()
     with open(OUTPUT+hostName+'/'+hostName+'.yml', 'wt') as configFile:
         configFile.write(configData)
@@ -120,5 +123,6 @@ if __name__ == "__main__":
             print(systemsData[0])
             buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
             buildService(systemsData[0])
+            buildDeb(systemsData[0])
             generateCert(systemsData[0],systemsData[1])
             buildDeb(systemsData[0])
