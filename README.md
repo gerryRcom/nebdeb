@@ -10,7 +10,8 @@ A means to manage nebula, specifically:
 
 #### TODO
 
-- Allow tayloring of services, my initial requirement is only fo ssh
-- Allow multiple LightHouses, my initial requirement only has one LightHouse
-- Allow simple method to rebuild everything e.g. in the case a cert is exposed
-- Build an ansible inventory to simplify deployment of the deb
+- Allow tayloring of services, my initial requirement is only fo ssh.
+- Allow multiple LightHouses, my initial requirement only has one LightHouse.
+- Allow simple method to rebuild everything e.g. in the case a cert is exposed.
+- Build an ansible inventory to simplify deployment of the deb.
+- I'm very late to the container party but it might be nice to have a container running this that monitors the input and output folders and rebuilds the debs as necessary.

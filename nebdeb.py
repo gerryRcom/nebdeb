@@ -7,15 +7,18 @@ import csv
 import re
 
 
-# Set some constants
-SYSTEMS = "input/systems.csv"
+# Set some constants for the source/ destination of all required/ generated content
 INPUT = "input/"
 OUTPUT = "output/"
-BINHASH = "input/binhash"
+
+# Some more relative constants
+SYSTEMS = INPUT+"systems.csv"
+BINHASH = INPUT+"binhash"
 LHIP = "1"
 
 
-
+# generate certs, this assumes the CA cert and key have already been genrated, default action creates host certs but doesn't overwrite them if they exist
+# this is useful if we need to rebuild deb due to new nebula binary we can just add the new binary, re-generate and the existing certs will be retained
 def generateCert(hostName, nebIP):
     certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
     print(certCommand)
@@ -124,8 +127,9 @@ def nebdebMenu():
     print("##   3 - List Systems Output  ##")
     print("##   4 - Generate configs     ##")
     print("##                            ##")
+    print("##   5 - Exit                 ##")
+    print("##                            ##")
     print("################################")
-
 
 
 if __name__ == "__main__":
@@ -137,8 +141,11 @@ if __name__ == "__main__":
         # skip header line
         next(systemsContent, None)
 
+
+
+        # print menu while waiting for input from user
         nebdebMenu()
-        print("Enter selection 1-4: ")
+        print("Enter selection 1-5: ")
         menuSelection = input()
         if menuSelection == "1":
             purgeOutput(menuSelection)
@@ -151,8 +158,11 @@ if __name__ == "__main__":
             for systemsData in systemsContent:
                 buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
                 buildService(systemsData[0])
+                # first run create folder structure for cert generation TODO - improve on this
                 buildDeb(systemsData[0])
                 generateCert(systemsData[0],systemsData[1])
                 buildDeb(systemsData[0])
+        elif menuSelection == "5":
+            exit()
         else:
             print("Invalid selection")
