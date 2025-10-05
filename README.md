@@ -1,6 +1,6 @@
 ## nebdeb
 
-A means to manage nebula, specifically:
+A automated means to manage nebula host configurations, specifically:
 
 - Building of nebula configurations for hosts.
 - Detect when a new host is added and just build a config for that.

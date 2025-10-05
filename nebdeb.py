@@ -5,6 +5,7 @@ import shutil
 import os
 import csv
 import re
+import datetime
 
 
 # Set some constants for the source/ destination of all required/ generated content
@@ -15,6 +16,38 @@ OUTPUT = "output/"
 SYSTEMS = INPUT+"systems.csv"
 BINHASH = INPUT+"binhash"
 LHIP = "1"
+
+
+# check for a specific file/ folder and return true or false
+def checkExists(toCheck):
+    if os.path.exists(toCheck):
+        return True
+    else:
+        return False
+
+# get date-time-stamp in preferred format, mostly used in log output
+def getDateTime():
+    timeStamp = datetime.datetime.now()
+    return(timeStamp.strftime("%Y-%m-%d-%H:%M:%S"))
+
+# log activity to output location as final version will not be run interactively
+def logIt(logInput):
+    nebdebLog=OUTPUT+"nebdeb.log"
+    if os.path.exists(nebdebLog):
+        try:
+            with open(nebdebLog, 'at') as nebdebLogContent:
+                nebdebLogContent.write(getDateTime()+","+logInput+"\n")
+                nebdebLogContent.close()
+        except:
+            print("error, unable to write to log file in output folder")
+    else:
+        try:
+            with open(nebdebLog, 'wt') as nebdebLogContent:
+                nebdebLogContent.write(getDateTime()+","+logInput+"\n")
+                nebdebLogContent.close()
+        except:
+            print("error, unable to create log file in output folder")
+
 
 
 # generate certs, this assumes the CA cert and key have already been genrated, default action creates host certs but doesn't overwrite them if they exist
@@ -136,6 +169,9 @@ if __name__ == "__main__":
     #buildConfig("testbane","199.222.222.222","false","1.1.1.1")
     #buildService("testbane")
 
+    logIt("testRun")
+
+    """  
     with open(INPUT+'systems.csv', newline='') as systemsCSV:
         systemsContent = csv.reader(systemsCSV)
         # skip header line
@@ -166,3 +202,4 @@ if __name__ == "__main__":
             exit()
         else:
             print("Invalid selection")
+        """
