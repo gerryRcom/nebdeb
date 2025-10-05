@@ -60,7 +60,7 @@ def generateCert(hostName, nebIP):
     logIt("cert generatetion complete,"+hostName+","+nebIP)
 
 
-# Get the hash of file to compare against previous version
+# Get the hash of a file to compare against previous version
 def getHash(fileName):
     if os.path.exists(INPUT+fileName):
         logIt("getting file hash for,"+fileName)
@@ -71,19 +71,26 @@ def getHash(fileName):
         logIt("unable to get file hash for,"+fileName)
 
 
-# Compare hash of current binary to previous known hash, update known hash value if it's different
+# Compare hash of current file to previous known hash, update known hash value if it's different
 # true/ false return will be used to determine if rebuild is required
-def compareHash():
-    with open(BINHASH, 'rt') as nebulaHash:
-        nebulaHashContent = nebulaHash.read()
-        nebulaHash.close()
-        if nebulaHashContent == getHash("nebula"):
-            return True
-        else:
-            with open(BINHASH, 'wt') as nebulaHash:
-                nebulaHash.write(getHash("nebula"))
-                nebulaHash.close()
-                return False
+def compareHash(hashToCompare):
+    hashToComparePath = INPUT+hashToCompare
+    if os.path.exists(hashToComparePath):
+        logIt("getting file hash for,"+hashToComparePath)
+        with open(hashToComparePath, 'rt') as fileHash:
+            fileHashContent = fileHash.read()
+            fileHash.close()
+            if fileHashContent == getHash(hashToComparePath):
+                logIt("hash has not changed for,"+hashToComparePath)
+                return True
+            else:
+                with open(hashToComparePath, 'wt') as fileHash:
+                    logIt("updating hash for,"+hashToComparePath)
+                    fileHash.write(getHash(hashToComparePath))
+                    fileHash.close()
+                    return False
+    else:
+        logIt("unable to get file hash for,"+hashToCompare)
 
 # build nebula config file per host
 def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
