@@ -53,15 +53,23 @@ def logIt(logInput):
 # generate certs, this assumes the CA cert and key have already been genrated, default action creates host certs but doesn't overwrite them if they exist
 # this is useful if we need to rebuild deb due to new nebula binary we can just add the new binary, re-generate and the existing certs will be retained
 def generateCert(hostName, nebIP):
+    logIt("generating cert,"+hostName+","+nebIP)
     certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
-    print(certCommand)
+    ##print(certCommand)
     print(subprocess.call(certCommand, shell=True))
+    logIt("cert generatetion complete,"+hostName+","+nebIP)
 
-# Get the hash of the nebula binary to compare against previous run
-def getHash():
-    with open(INPUT+'nebula', 'rb') as nebulaBinary:
-        nebulaBinaryContent = nebulaBinary.read()
-        return hashlib.sha256(nebulaBinaryContent).hexdigest()
+
+# Get the hash of file to compare against previous version
+def getHash(fileName):
+    if os.path.exists(INPUT+fileName):
+        logIt("getting file hash for,"+fileName)
+        with open(INPUT+fileName, 'rb') as fileBinary:
+            fileBinaryContent = fileBinary.read()
+            return hashlib.sha256(fileBinaryContent).hexdigest()
+    else:
+        logIt("unable to get file hash for,"+fileName)
+
 
 # Compare hash of current binary to previous known hash, update known hash value if it's different
 # true/ false return will be used to determine if rebuild is required
@@ -69,11 +77,11 @@ def compareHash():
     with open(BINHASH, 'rt') as nebulaHash:
         nebulaHashContent = nebulaHash.read()
         nebulaHash.close()
-        if nebulaHashContent == getHash():
+        if nebulaHashContent == getHash("nebula"):
             return True
         else:
             with open(BINHASH, 'wt') as nebulaHash:
-                nebulaHash.write(getHash())
+                nebulaHash.write(getHash("nebula"))
                 nebulaHash.close()
                 return False
 
