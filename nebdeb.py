@@ -183,29 +183,53 @@ if __name__ == "__main__":
 
     # If flag to purge was reeived or if the nebula binary changed, re-build all host configs.
     if not compareHash() or toPurge == "yes":
-        with open(INPUT+'systems.csv', newline='') as systemsCSV:
-            systemsContent = csv.reader(systemsCSV)
-            # skip header line
-            next(systemsContent, None)
-
-            for systemsData in systemsContent:
-                buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
-                buildService(systemsData[0])
-                # first run create folder structure for cert generation TODO - improve on this
-                buildDeb(systemsData[0])
-                generateCert(systemsData[0],systemsData[1])
-                buildDeb(systemsData[0])
-    # If flag to purge was not received and if the nebula binary has not change, only buold hosts that do not have an existing output
-    else:
-        with open(INPUT+'systems.csv', newline='') as systemsCSV:
-            systemsContent = csv.reader(systemsCSV)
-            # skip header line
-            next(systemsContent, None)
-            for systemsData in systemsContent:
-                if not checkExists(OUTPUT+systemsData[0]):
+        logIt("proceeding to rebuild all host configs")
+        logIt("opening systems.csv for host data")
+        if os.path.exists(INPUT+'systems.csv'):
+            with open(INPUT+'systems.csv', newline='') as systemsCSV:
+                systemsContent = csv.reader(systemsCSV)
+                # skip header line
+                next(systemsContent, None)
+                logIt("iterating through hosts")
+                for systemsData in systemsContent:
+                    logIt("building config for host,"+systemsData[0])
                     buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+                    logIt("building service file for host,"+systemsData[0])
                     buildService(systemsData[0])
                     # first run create folder structure for cert generation TODO - improve on this
+                    logIt("building deb structure for host,"+systemsData[0])
                     buildDeb(systemsData[0])
+                    logIt("generating cert for host,"+systemsData[0])
                     generateCert(systemsData[0],systemsData[1])
+                    logIt("building deb for host,"+systemsData[0])
                     buildDeb(systemsData[0])
+        else:
+            logIt("unable to open systems.csv file")
+    # If flag to purge was not received and if the nebula binary has not change, only buold hosts that do not have an existing output
+    else:
+        logIt("building host config if no output found")
+        logIt("opening systems.csv for host data")
+        if os.path.exists(INPUT+'systems.csv'):
+            with open(INPUT+'systems.csv', newline='') as systemsCSV:
+                systemsContent = csv.reader(systemsCSV)
+                # skip header line
+                next(systemsContent, None)
+                for systemsData in systemsContent:
+                    logIt("checking for output content for host,"+systemsData[0])
+                    if not checkExists(OUTPUT+systemsData[0]):
+                        logIt("no existing output found for host,"+systemsData[0])
+                        logIt("building config for host,"+systemsData[0])
+                        buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+                        logIt("building service file for host,"+systemsData[0])
+                        buildService(systemsData[0])
+                        # first run create folder structure for cert generation TODO - improve on this
+                        logIt("building deb structure for host,"+systemsData[0])
+                        buildDeb(systemsData[0])
+                        logIt("generating cert for host,"+systemsData[0])
+                        generateCert(systemsData[0],systemsData[1])
+                        logIt("building deb for host,"+systemsData[0])
+                        buildDeb(systemsData[0])
+                    else:
+                        logIt("existing output content found for host,"+systemsData[0])
+        else:
+            logIt("unable to open systems.csv file")
