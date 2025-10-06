@@ -60,37 +60,39 @@ def generateCert(hostName, nebIP):
     logIt("cert generatetion complete,"+hostName+","+nebIP)
 
 
-# Get the hash of a file to compare against previous version
-def getHash(fileName):
-    if os.path.exists(INPUT+fileName):
-        logIt("getting file hash for,"+fileName)
-        with open(INPUT+fileName, 'rb') as fileBinary:
-            fileBinaryContent = fileBinary.read()
-            return hashlib.sha256(fileBinaryContent).hexdigest()
+# Get the hash of the nebula binary to comapre against previous run
+def getHash():
+    if os.path.exists(INPUT+"nebula"):
+        logIt("getting file hash for nebula")
+        with open(INPUT+'nebula', 'rb') as nebulaBinary:
+            nebulaBinaryContent = nebulaBinary.read()
+            return hashlib.sha256(nebulaBinaryContent).hexdigest()
     else:
-        logIt("unable to get file hash for,"+fileName)
+        logIt("unable to get file hash for nebula")
 
-
-# Compare hash of current file to previous known hash, update known hash value if it's different
+## Compare hash of current binary to previous known hash, update known hash value if it's different
 # true/ false return will be used to determine if rebuild is required
-def compareHash(hashToCompare):
-    hashToComparePath = INPUT+hashToCompare
-    if os.path.exists(hashToComparePath):
-        logIt("getting file hash for,"+hashToComparePath)
-        with open(hashToComparePath, 'rt') as fileHash:
-            fileHashContent = fileHash.read()
-            fileHash.close()
-            if fileHashContent == getHash(hashToComparePath):
-                logIt("hash has not changed for,"+hashToComparePath)
+def compareHash():
+    if os.path.exists(BINHASH):
+        logIt("getting file hash for nebula to compare")
+        with open(BINHASH, 'rt') as nebulaHash:
+            nebulaHashContent = nebulaHash.read()
+            nebulaHash.close()
+            logIt("comparing hash with known hash")
+            if nebulaHashContent == getHash():
+                logIt("hash has not changed")
                 return True
             else:
-                with open(hashToComparePath, 'wt') as fileHash:
-                    logIt("updating hash for,"+hashToComparePath)
-                    fileHash.write(getHash(hashToComparePath))
-                    fileHash.close()
+                logIt("hash has changed")
+                with open(BINHASH, 'wt') as nebulaHash:
+                    logIt("updating known hash")
+                    nebulaHash.write(getHash())
+                    nebulaHash.close()
                     return False
     else:
-        logIt("unable to get file hash for,"+hashToCompare)
+        logIt("unable to get file hash for to compare")
+
+
 
 # build nebula config file per host
 def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
@@ -161,51 +163,31 @@ def buildDeb(hostName):
     print(subprocess.call(debCommand, shell=True))
 
 # purge all previously generated output e.g. if a cert was exposed or you a new binary was released.
-def purgeOutput(toPurge):
-    if toPurge == "1":
-        shutil.rmtree(OUTPUT)
-
-
-def nebdebMenu():
-    print("################################")
-    print("##   nebdeb - Manage Nebula   ##")
-    print("##                            ##")
-    print("##   1 - Purge All Output     ##")
-    print("##   2 - List Systems in csv  ##")
-    print("##   3 - List Systems Output  ##")
-    print("##   4 - Generate configs     ##")
-    print("##                            ##")
-    print("##   5 - Exit                 ##")
-    print("##                            ##")
-    print("################################")
-
+def purgeOutput():
+    logIt("purging all output")
+    shutil.rmtree(OUTPUT)
 
 if __name__ == "__main__":
     #buildConfig("testbane","199.222.222.222","false","1.1.1.1")
     #buildService("testbane")
+    toPurge = ""
+    logIt("check if required to purge all existing output")
+    if os.path.exists(INPUT+"purgeall"):
+        purgeOutput()
+        logIt("resetting purge request")
+        os.remove(INPUT+"purgeall")
+        toPurge = "yes"
+    else:
+        logIt("no request to purge content found")
+        toPurge = "no"
 
-    logIt("testRun")
+    # If flag to purge was reeived or if the nebula binary changed, re-build all host configs.
+    if not compareHash() or toPurge == "yes":
+        with open(INPUT+'systems.csv', newline='') as systemsCSV:
+            systemsContent = csv.reader(systemsCSV)
+            # skip header line
+            next(systemsContent, None)
 
-    """  
-    with open(INPUT+'systems.csv', newline='') as systemsCSV:
-        systemsContent = csv.reader(systemsCSV)
-        # skip header line
-        next(systemsContent, None)
-
-
-
-        # print menu while waiting for input from user
-        nebdebMenu()
-        print("Enter selection 1-5: ")
-        menuSelection = input()
-        if menuSelection == "1":
-            purgeOutput(menuSelection)
-        elif menuSelection == "2":
-            for systemsData in systemsContent:
-                print(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
-        elif menuSelection == "3":
-            print(os.listdir(OUTPUT))
-        elif menuSelection == "4":
             for systemsData in systemsContent:
                 buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
                 buildService(systemsData[0])
@@ -213,8 +195,17 @@ if __name__ == "__main__":
                 buildDeb(systemsData[0])
                 generateCert(systemsData[0],systemsData[1])
                 buildDeb(systemsData[0])
-        elif menuSelection == "5":
-            exit()
-        else:
-            print("Invalid selection")
-        """
+    # If flag to purge was not received and if the nebula binary has not change, only buold hosts that do not have an existing output
+    else:
+        with open(INPUT+'systems.csv', newline='') as systemsCSV:
+            systemsContent = csv.reader(systemsCSV)
+            # skip header line
+            next(systemsContent, None)
+            for systemsData in systemsContent:
+                if not checkExists(OUTPUT+systemsData[0]):
+                    buildConfig(systemsData[0],systemsData[1],systemsData[2],systemsData[3])
+                    buildService(systemsData[0])
+                    # first run create folder structure for cert generation TODO - improve on this
+                    buildDeb(systemsData[0])
+                    generateCert(systemsData[0],systemsData[1])
+                    buildDeb(systemsData[0])
