@@ -69,6 +69,7 @@ def getHash():
             return hashlib.sha256(nebulaBinaryContent).hexdigest()
     else:
         logIt("unable to get file hash for nebula")
+        exit()
 
 ## Compare hash of current binary to previous known hash, update known hash value if it's different
 # true/ false return will be used to determine if rebuild is required
@@ -90,9 +91,13 @@ def compareHash():
                     nebulaHash.close()
                     return False
     else:
+        # save the hash for next run if no hash was found
         logIt("unable to get file hash for to compare")
-
-
+        with open(BINHASH, 'wt') as nebulaHash:
+            logIt("saving current hash")
+            nebulaHash.write(getHash())
+            nebulaHash.close()
+            return False
 
 # build nebula config file per host
 def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
@@ -173,6 +178,11 @@ if __name__ == "__main__":
     toPurge = ""
     logIt("check if required to purge all existing output")
     if os.path.exists(INPUT+"purgeall"):
+
+
+
+
+
         purgeOutput()
         logIt("resetting purge request")
         os.remove(INPUT+"purgeall")
