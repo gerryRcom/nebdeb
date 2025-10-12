@@ -1,0 +1,7 @@
+services:
+  nebdeb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/nebdeb:rw
