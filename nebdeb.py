@@ -21,8 +21,10 @@ LHIP = "1"
 # check for a specific file/ folder and return true or false
 def checkExists(toCheck):
     if os.path.exists(toCheck):
+        logIt("confirmed the path,"+toCheck)
         return True
     else:
+        logIt("no such path,"+toCheck)
         return False
 
 # get date-time-stamp in preferred format, mostly used in log output
@@ -53,11 +55,14 @@ def logIt(logInput):
 # generate certs, this assumes the CA cert and key have already been genrated, default action creates host certs but doesn't overwrite them if they exist
 # this is useful if we need to rebuild deb due to new nebula binary we can just add the new binary, re-generate and the existing certs will be retained
 def generateCert(hostName, nebIP):
-    logIt("generating cert,"+hostName+","+nebIP)
-    certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
-    ##print(certCommand)
-    print(subprocess.call(certCommand, shell=True))
-    logIt("cert generatetion complete,"+hostName+","+nebIP)
+    if checkExists(INPUT+"/certs/nebula-cert sign"):
+        logIt("generating cert,"+hostName+","+nebIP)
+        certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
+        ##print(certCommand)
+        print(subprocess.call(certCommand, shell=True))
+        logIt("cert generatetion complete,"+hostName+","+nebIP)
+    else:
+        exit()
 
 
 # Get the hash of the nebula binary to comapre against previous run
@@ -153,15 +158,18 @@ def buildService(hostName):
 # build deb package per host
 def buildDeb(hostName):
     # build folder and file structure for the .deb
-    os.makedirs(OUTPUT+hostName+'/nebula/',exist_ok=True)
-    os.makedirs(OUTPUT+hostName+'/nebula/usr/bin/nebula/',exist_ok=True)
-    os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
-    shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
-    shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
-    shutil.copy2(INPUT+'certs/ca.crt', OUTPUT+hostName+'/nebula/usr/bin/nebula/ca.crt')
-    shutil.copy2(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
-    shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
-
+    try:
+        os.makedirs(OUTPUT+hostName+'/nebula/',exist_ok=True)
+        os.makedirs(OUTPUT+hostName+'/nebula/usr/bin/nebula/',exist_ok=True)
+        os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
+        shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
+        shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
+        shutil.copy2(INPUT+'certs/ca.crt', OUTPUT+hostName+'/nebula/usr/bin/nebula/ca.crt')
+        shutil.copy2(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
+        shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
+    except:
+        print("error, unable to locate content when copying to {1} output folder"+hostName)
+        exit()
     # build deb package from content generated above
     debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula"
     print(debCommand)
@@ -178,11 +186,6 @@ if __name__ == "__main__":
     toPurge = ""
     logIt("check if required to purge all existing output")
     if os.path.exists(INPUT+"purgeall"):
-
-
-
-
-
         purgeOutput()
         logIt("resetting purge request")
         os.remove(INPUT+"purgeall")
@@ -195,8 +198,8 @@ if __name__ == "__main__":
     if not compareHash() or toPurge == "yes":
         logIt("proceeding to rebuild all host configs")
         logIt("opening systems.csv for host data")
-        if os.path.exists(INPUT+'systems.csv'):
-            with open(INPUT+'systems.csv', newline='') as systemsCSV:
+        if os.path.exists(SYSTEMS):
+            with open(SYSTEMS, newline='') as systemsCSV:
                 systemsContent = csv.reader(systemsCSV)
                 # skip header line
                 next(systemsContent, None)
@@ -219,8 +222,8 @@ if __name__ == "__main__":
     else:
         logIt("building host config if no output found")
         logIt("opening systems.csv for host data")
-        if os.path.exists(INPUT+'systems.csv'):
-            with open(INPUT+'systems.csv', newline='') as systemsCSV:
+        if os.path.exists(SYSTEMS):
+            with open(SYSTEMS, newline='') as systemsCSV:
                 systemsContent = csv.reader(systemsCSV)
                 # skip header line
                 next(systemsContent, None)
