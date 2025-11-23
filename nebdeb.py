@@ -55,11 +55,10 @@ def logIt(logInput):
 # generate certs, this assumes the CA cert and key have already been genrated, default action creates host certs but doesn't overwrite them if they exist
 # this is useful if we need to rebuild deb due to new nebula binary we can just add the new binary, re-generate and the existing certs will be retained
 def generateCert(hostName, nebIP):
-    if checkExists(INPUT+"/certs/nebula-cert sign"):
+    if checkExists(INPUT+"certs/nebula-cert"):
         logIt("generating cert,"+hostName+","+nebIP)
-        certCommand=INPUT+"/certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
-        ##print(certCommand)
-        print(subprocess.call(certCommand, shell=True))
+        certCommand=INPUT+"certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
+        subprocess.call(certCommand, shell=True)
         logIt("cert generatetion complete,"+hostName+","+nebIP)
     else:
         exit()
@@ -117,10 +116,8 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
 
     # Get the IP of the lighthouse using the network address and the LHIP constant
     lightHouseIP = re.sub(r'\d{1,3}$',LHIP,nebIP)
-
     os.makedirs(OUTPUT+hostName,exist_ok=True)
     shutil.copyfile(INPUT+'nebula.yml', OUTPUT+hostName+'/'+hostName+'.yml')
-
     # read in the nebula template, substitute placeholders and output host's nebula config file
     with open(OUTPUT+hostName+'/'+hostName+'.yml', 'rt') as configFile:
         configData = configFile.read()
@@ -145,7 +142,6 @@ def buildService(hostName):
     # Define placeholder entries
     PH_HOST="##HOSTNAME##"
     shutil.copyfile(INPUT+'nebula.service', OUTPUT+hostName+'/nebula.service')
-
     # read in the service template, substitute placeholders and output host's service file
     with open(OUTPUT+hostName+'/nebula.service', 'rt') as serviceFile:
         serviceData = serviceFile.read()
@@ -172,8 +168,7 @@ def buildDeb(hostName):
         exit()
     # build deb package from content generated above
     debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula"
-    print(debCommand)
-    print(subprocess.call(debCommand, shell=True))
+    subprocess.call(debCommand, shell=True)
 
 # purge all previously generated output e.g. if a cert was exposed or you a new binary was released.
 def purgeOutput():
@@ -181,8 +176,6 @@ def purgeOutput():
     shutil.rmtree(OUTPUT)
 
 if __name__ == "__main__":
-    #buildConfig("testbane","199.222.222.222","false","1.1.1.1")
-    #buildService("testbane")
     toPurge = ""
     logIt("check if required to purge all existing output")
     if os.path.exists(INPUT+"purgeall"):
