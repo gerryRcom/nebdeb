@@ -183,6 +183,7 @@ if __name__ == "__main__":
         logIt("resetting purge request")
         os.remove(INPUT+"purgeall")
         toPurge = "yes"
+        os.makedirs(OUTPUT,exist_ok=True)
     else:
         logIt("no request to purge content found")
         toPurge = "no"
