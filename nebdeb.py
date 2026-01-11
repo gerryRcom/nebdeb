@@ -168,7 +168,7 @@ def buildDeb(hostName):
         print("error, unable to locate content when copying to {1} output folder"+hostName)
         exit()
     # build deb package from content generated above
-    debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula"
+    debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula "+OUTPUT+hostName+"/"+hostName+"-nebula.deb"
     subprocess.call(debCommand, shell=True)
 
 # purge all previously generated output e.g. if a cert was exposed or you a new binary was released.
