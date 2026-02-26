@@ -58,7 +58,7 @@ def logIt(logInput):
 def generateCert(hostName, nebIP):
     if checkExists(INPUT+"certs/nebula-cert"):
         logIt("generating cert,"+hostName+","+nebIP)
-        certCommand=INPUT+"certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebula/usr/bin/nebula/"+hostName+".key"
+        certCommand=INPUT+"certs/nebula-cert sign -ca-crt "+INPUT+"certs/ca.crt -ca-key "+INPUT+"certs/ca.key -name "+hostName+" -ip "+nebIP+"/24 -out-crt "+OUTPUT+hostName+"/nebdeb/usr/bin/nebdeb/"+hostName+".crt -out-key "+OUTPUT+hostName+"/nebdeb/usr/bin/nebdeb/"+hostName+".key"
         subprocess.call(certCommand, shell=True)
         logIt("cert generatetion complete,"+hostName+","+nebIP)
     else:
@@ -142,13 +142,13 @@ def buildConfig(hostName,nebIP,amLighthouse,lightHouse):
 def buildService(hostName):
     # Define placeholder entries
     PH_HOST="##HOSTNAME##"
-    shutil.copyfile(INPUT+'nebula.service', OUTPUT+hostName+'/nebula.service')
+    shutil.copyfile(INPUT+'nebdeb.service', OUTPUT+hostName+'/nebdeb.service')
     # read in the service template, substitute placeholders and output host's service file
-    with open(OUTPUT+hostName+'/nebula.service', 'rt') as serviceFile:
+    with open(OUTPUT+hostName+'/nebdeb.service', 'rt') as serviceFile:
         serviceData = serviceFile.read()
         serviceData = serviceData.replace(PH_HOST, hostName)
         serviceFile.close()
-    with open(OUTPUT+hostName+'/nebula.service', 'wt') as serviceFile:
+    with open(OUTPUT+hostName+'/nebdeb.service', 'wt') as serviceFile:
         serviceFile.write(serviceData)
         serviceFile.close()
 
@@ -156,19 +156,19 @@ def buildService(hostName):
 def buildDeb(hostName):
     # build folder and file structure for the .deb
     try:
-        os.makedirs(OUTPUT+hostName+'/nebula/',exist_ok=True)
-        os.makedirs(OUTPUT+hostName+'/nebula/usr/bin/nebula/',exist_ok=True)
-        os.makedirs(OUTPUT+hostName+'/nebula/etc/systemd/system/',exist_ok=True)
-        shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebula/', dirs_exist_ok=True)
-        shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebula/usr/bin/nebula/nebula')
-        shutil.copy2(INPUT+'certs/ca.crt', OUTPUT+hostName+'/nebula/usr/bin/nebula/ca.crt')
-        shutil.copy2(OUTPUT+hostName+'/nebula.service', OUTPUT+hostName+'/nebula/etc/systemd/system/nebula.service')
-        shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebula/usr/bin/nebula/'+hostName+'.yml')
+        os.makedirs(OUTPUT+hostName+'/nebdeb/',exist_ok=True)
+        os.makedirs(OUTPUT+hostName+'/nebdeb/usr/bin/nebdeb/',exist_ok=True)
+        os.makedirs(OUTPUT+hostName+'/nebdeb/etc/systemd/system/',exist_ok=True)
+        shutil.copytree(INPUT+'DEB', OUTPUT+hostName+'/nebdeb/', dirs_exist_ok=True)
+        shutil.copy2(INPUT+'nebula', OUTPUT+hostName+'/nebdeb/usr/bin/nebdeb/nebula')
+        shutil.copy2(INPUT+'certs/ca.crt', OUTPUT+hostName+'/nebdeb/usr/bin/nebdeb/ca.crt')
+        shutil.copy2(OUTPUT+hostName+'/nebdeb.service', OUTPUT+hostName+'/nebdeb/etc/systemd/system/nebdeb.service')
+        shutil.copy2(OUTPUT+hostName+'/'+hostName+'.yml', OUTPUT+hostName+'/nebdeb/usr/bin/nebdeb/'+hostName+'.yml')
     except:
         print("error, unable to locate content when copying to {1} output folder"+hostName)
         exit()
     # build deb package from content generated above
-    debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebula "+OUTPUT+hostName+"/"+hostName+"-nebula.deb"
+    debCommand="dpkg-deb --build --root-owner-group "+OUTPUT+hostName+"/nebdeb "+OUTPUT+hostName+"/"+hostName+"-nebdeb.deb"
     subprocess.call(debCommand, shell=True)
 
 # purge all previously generated output e.g. if a cert was exposed or you a new binary was released.

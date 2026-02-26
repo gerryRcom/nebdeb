@@ -1,0 +1,10 @@
+[Unit]
+Description=nebdeb configured Nebula mesh service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/nebdeb/nebula -config /usr/bin/nebdeb/##HOSTNAME##.yml
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
